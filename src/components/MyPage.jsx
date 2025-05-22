@@ -16,6 +16,7 @@ import axiosInstance from '../configs/axios-config';
 import { useNavigate } from 'react-router-dom';
 import { handleAxiosError } from '../configs/HandleAxiosError';
 import OrderListComponent from './OrderListComponent';
+import { API_BASE_URL, USER } from '../configs/host-config';
 
 const MyPage = () => {
   const [memberInfoList, setMemberInfoList] = useState([]);
@@ -35,8 +36,8 @@ const MyPage = () => {
         const role = localStorage.getItem('USER_ROLE');
         const url =
           role === 'ADMIN'
-            ? 'http://localhost:8000/user-service/user/list'
-            : 'http://localhost:8000/user-service/user/myInfo';
+            ? `${API_BASE_URL}${USER}/list`
+            : `${API_BASE_URL}${USER}/myInfo`;
 
         const res = await axiosInstance.get(url);
 
