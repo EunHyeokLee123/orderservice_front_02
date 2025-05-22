@@ -7,21 +7,8 @@
 */
 
 // 브라우저에서 현재 클라이언트의 호스트 이름을 얻어오기
-const clientHostName = window.location.hostname;
 
-let backendHostName;
-
-if (clientHostName === 'localhost') {
-  // 개발중이라는 의미
-  backendHostName = 'http://localhost:8000';
-}
-// 배포를 했다는 가정하에
-else if (clientHostName === 'playdatashop.com') {
-  // 배포해서 현재 서비스 중
-  backendHostName = 'http://13.124.100.251:8000';
-}
-
-export const API_BASE_URL = backendHostName;
+export const API_BASE_URL = 'http://13.124.100.251:8000';
 export const USER = '/user-service/user';
 export const PROD = '/product-service/product';
 export const ORDER = '/ordering-service/order';
