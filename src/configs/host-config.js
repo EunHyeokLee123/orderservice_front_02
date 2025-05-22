@@ -18,10 +18,10 @@ if (clientHostName === 'localhost') {
 // 배포를 했다는 가정하에
 else if (clientHostName === 'playdatashop.com') {
   // 배포해서 현재 서비스 중
-  backendHostName = 'https://api.playdatashop.com';
+  backendHostName = 'http://13.124.100.251:8000';
 }
 
-export const API_BASE_URL = 'http://13.124.100.251:8000';
+export const API_BASE_URL = backendHostName;
 export const USER = '/user-service/user';
 export const PROD = '/product-service/product';
 export const ORDER = '/ordering-service/order';
