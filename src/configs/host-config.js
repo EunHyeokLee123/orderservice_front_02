@@ -21,7 +21,7 @@ else if (clientHostName === 'playdatashop.com') {
   backendHostName = 'https://api.playdatashop.com';
 }
 
-export const API_BASE_URL = backendHostName;
+export const API_BASE_URL = 'http://13.124.100.251:8000';
 export const USER = '/user-service/user';
 export const PROD = '/product-service/product';
 export const ORDER = '/ordering-service/order';
