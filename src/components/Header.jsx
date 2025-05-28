@@ -7,15 +7,50 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../context/UserContext';
+import { EventSourcePolyfill } from 'event-source-polyfill';
+import { API_BASE_URL, SSE } from '../configs/host-config';
 
 const Header = () => {
   // 로그인 상태에 따라 메뉴를 다르게 제공하고 싶다 -> 로그인 상태를 알아야함.
   const { isLoggedIn, userRole, onLogout } = useContext(AuthContext);
 
   const navigate = useNavigate();
+
+  const [liveQuantity, setLiveQuantity] = useState(0);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    console.log('role: ', userRole);
+    const token = localStorage.getItem('ACCESS_TOKEN');
+
+    if (userRole === 'ADMIN') {
+      // 알림을 받기 위해 서버와 연결을 하기 위한 요청을 하겠다!
+      const sse = new EventSourcePolyfill(`${API_BASE_URL}${SSE}/subscribe`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      sse.addEventListener('connect', (e) => {
+        console.log(e);
+      });
+
+      // heartbeat 이벤트
+      sse.addEventListener('heartbeat', (e) => {
+        console.log('Received Heartbeat');
+      });
+
+      sse.addEventListener('ordered', (e) => {
+        const orderData = JSON.parse(e.data);
+        console.log(orderData);
+        setLiveQuantity((prev) => prev + 1);
+        setMessage(orderData.useEmail + '님의 주문!');
+      });
+    }
+  }, [userRole]);
 
   const handleLogout = () => {
     onLogout();
@@ -42,8 +77,8 @@ const Header = () => {
                   <Button color='inherit' component={Link} to='/product/manage'>
                     상품관리
                   </Button>
-                  <Button color='inherit' href='/order/list'>
-                    실시간 주문 ()
+                  <Button color='inherit' onClick={() => setLiveQuantity(0)}>
+                    실시간 주문 ({liveQuantity})
                   </Button>
                 </>
               )}
