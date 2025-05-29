@@ -64,9 +64,9 @@ const Header = () => {
         console.log(e);
       });
 
-      // heartbeat 이벤트
-      currentSSE.current.addEventListener('heartbeat', (e) => {
-        console.log('Received Heartbeat');
+      currentSSE.current.addEventListener('pending-order', (e) => {
+        const orderData = JSON.parse(e.data);
+        console.log(orderData);
       });
 
       currentSSE.current.addEventListener('new-order', (e) => {
