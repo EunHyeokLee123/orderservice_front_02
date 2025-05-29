@@ -7,7 +7,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../context/UserContext';
 import { EventSourcePolyfill } from 'event-source-polyfill';
@@ -22,41 +22,87 @@ const Header = () => {
   const [liveQuantity, setLiveQuantity] = useState(0);
   const [message, setMessage] = useState('');
 
+  // useRef로 SSE 연결값 참조 (리렌더링 시 초기화 안됨)
+  const currentSSE = useRef(null);
+
   useEffect(() => {
+    // 기존 연결이 있으면 해제를 하고, 새로 연결하겠다.
+    if (currentSSE.current) {
+      currentSSE.current.close();
+      currentSSE.current = null;
+    }
+
     console.log('role: ', userRole);
     const token = localStorage.getItem('ACCESS_TOKEN');
 
     if (userRole === 'ADMIN') {
       // 알림을 받기 위해 서버와 연결을 하기 위한 요청을 하겠다!
-      const sse = new EventSourcePolyfill(`${API_BASE_URL}${SSE}/subscribe`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      currentSSE.current = new EventSourcePolyfill(
+        `${API_BASE_URL}${SSE}/subscribe`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          /* 
+          heartbeatTimeout: 2분동안 아무 메시지도 안 오면 연결이 끊어졌다고 판단
+          2분 후 자동으로 연결을 끊고 재연결 시도
+          
+          retryDelayGrowth: 재연결 실패 시 대기시간 증가 비율 -> 실패할 때마다 대기 시간을 1.5배씩 증가
+          1번째 1초 대기 -> 2번째 1.5초 대기 -> ....이런 식으로 대기시간이 증가
 
-      sse.addEventListener('connect', (e) => {
+          maxRetryDelay: 재연결 대기 시간의 상한 값 -> 최대 30초 이상은 재연결을 대기하지 않겠다
+          30초까지 재연결을 대기하다가, 더이상 재연결을 하지 않는다.
+
+          */
+          heartbeatTimeout: 30000,
+          retryDelayGrowth: 1.5,
+          maxRetryDelay: 30000,
+        },
+      );
+
+      currentSSE.current.addEventListener('connect', (e) => {
         console.log(e);
       });
 
       // heartbeat 이벤트
-      sse.addEventListener('heartbeat', (e) => {
+      currentSSE.current.addEventListener('heartbeat', (e) => {
         console.log('Received Heartbeat');
       });
 
-      sse.addEventListener('ordered', (e) => {
+      currentSSE.current.addEventListener('new-order', (e) => {
         const orderData = JSON.parse(e.data);
         console.log(orderData);
-        setLiveQuantity((prev) => prev + 1);
-        setMessage(orderData.useEmail + '님의 주문!');
       });
+
+      currentSSE.current.onerror = (error) => {
+        console.log('SSE 연결 오류 발생. 오류 원인은 ', error);
+        // token 만료
+        if (error.status === 401) {
+          handleLogout();
+        }
+      };
     }
   }, [userRole]);
 
   const handleLogout = () => {
+    if (currentSSE.current) {
+      console.log('로그아웃으로 인해 SSE가 해제된다.');
+      currentSSE.current.close();
+      currentSSE.current = null;
+    }
+
     onLogout();
     alert('로그아웃 완료');
     navigate('/');
   };
+
+  // 페이지 언로드 시에도 연결 해제
+  // 인터넷에 문제가 있거나, 관리자가 브라우저를 닫았을 때나 새로고침을 눌렀을 떄
+  window.addEventListener('beforeunload', (e) => {
+    if (currentSSE.current) {
+      currentSSE.current.close();
+    }
+  });
 
   return (
     <AppBar position='static'>
