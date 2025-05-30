@@ -68,7 +68,7 @@ const OrderPage = () => {
         orederProducts,
       );
 
-      console.log('axios를 통해 전달받은 데이터: ', res);
+      console.log('axios를 통해 전달받은 데이터는 이러합니다 : ', res);
       alert('주문이 완료되었습니다.');
       clearCart();
     } catch (err) {
