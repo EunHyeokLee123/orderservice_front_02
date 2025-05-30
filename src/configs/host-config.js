@@ -10,7 +10,7 @@
 
 //
 
-export const API_BASE_URL = 'http://13.124.0.225:8000';
+export const API_BASE_URL = 'http://3.34.145.87:8000';
 export const USER = '/user-service/user';
 export const PROD = '/product-service/product';
 export const ORDER = '/ordering-service/order';
